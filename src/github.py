@@ -8,7 +8,6 @@ log = logging.getLogger(__name__)
 try:
   GITHUB_ACCESS_TOKEN = os.environ.get("GITHUB_ACCESS_TOKEN")
   GITHUB_ORG = os.environ.get("GITHUB_ORG")
-  url=f'https://github.com/{GITHUB_ORG}/'
   headers_github = {'Authorization': f'Bearer {GITHUB_ACCESS_TOKEN}', 
     'Accept': 'application/vnd.github+json',
     'X-GitHub-Api-Version': '2022-11-28'}
@@ -16,26 +15,26 @@ except NameError as err:
   log.critical(err)
   exit(1)
 
-def get_octocat():
+def make_get_request(url):
   try:
-    r = requests.get('https://api.github.com/octocat', headers=headers_github)
-    log.debug(f'GET /octocat: {r.status_code}')
+    r = requests.get(url, headers=headers_github)
+    log.debug(f'GET {url}: {r.status_code}')
     r.raise_for_status()
-    print(r.text)
-    return True
+    return r.json()
   except HTTPError as e:
-    log.critical(f'Error validating token: {e}')
+    log.critical(f'HTTP error occurred: {e}')
     exit(4)
 
+def get_octocat():
+  response = make_get_request('https://api.github.com/octocat')
+  print(response)
+  return True
+
 def get_authenticated_user():
-  try:
-    r = requests.get('https://api.github.com/user', headers=headers_github)
-    log.debug(f'GET /user: {r.status_code}')
-    r.raise_for_status()
-    log.debug(r.json())
-    rjson = r.json()
-    print(f'Authenticated as: {rjson["login"]}, url is {rjson["url"]} and email is {rjson["email"]}')
-    return True
-  except HTTPError  as e:
-    log.critical(f'Authentication error: {e}')
-    exit(4)
+  response = make_get_request('https://api.github.com/user')
+  print(f'Authenticated as \'{response["login"]}\'')
+
+def get_repository(repository_name):
+  url = f'https://api.github.com/repos/{GITHUB_ORG}/{repository_name}'
+  response = make_get_request(url)
+  log.debug(response)

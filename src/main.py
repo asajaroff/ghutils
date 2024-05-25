@@ -36,7 +36,7 @@ def main():
     exit(0)
   if args.target is not None:
     log.debug(f'Target repository: {args.target}')
-    get_octocat()
+    get_repository(repository_name=args.target)
   exit(0)
 
 if __name__ == '__main__':
